@@ -927,12 +927,84 @@ export function ChatMessage(props: {
             />
           )}
 
-          {/* Char & Word count */}
-          {/*{!zenMode && !isEditingText && !messagePendingIncomplete && fragmentFlattenedText.length > 0 && (*/}
-          {/*  <Typography level='body-xs' sx={{ mx: 1.5, mt: 0.5, textAlign: fromAssistant ? 'left' : 'right', opacity: 0.5 }}>*/}
-          {/*    {fragmentFlattenedText.length.toLocaleString()} chars · {(fragmentFlattenedText.match(/\S+/g) || []).length.toLocaleString()} words*/}
-          {/*  </Typography>*/}
-          {/*)}*/}
+          {/* Quick Actions (Copy & Speak) for Assistant messages */}
+          {fromAssistant && !messagePendingIncomplete && !isEditingText && (
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                gap: 1.5, 
+                mt: 1, 
+                ml: 1.5, 
+                mb: 0.5, 
+                alignItems: 'center'
+              }}
+            >
+              <IconButton
+                size='sm'
+                variant='plain'
+                color='neutral'
+                onClick={(e) => { e.preventDefault(); copyToClipboard(fragmentFlattenedText, 'Respuesta'); }}
+                sx={{
+                  color: 'text.secondary',
+                  borderRadius: 'md',
+                  px: 1.5,
+                  py: 0.5,
+                  fontSize: 'xs',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  minHeight: '1.75rem',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  backgroundColor: 'background.surface',
+                  transition: 'all 0.16s ease',
+                  '&:hover': { 
+                    color: 'primary.solidBg', 
+                    borderColor: 'primary.solidBg',
+                    backgroundColor: 'background.level1',
+                    transform: 'translateY(-1px)'
+                  },
+                }}
+              >
+                <ContentCopyIcon sx={{ fontSize: '0.875rem' }} />
+                <Typography level='body-xs' sx={{ fontWeight: 600, color: 'inherit' }}>Copiar respuesta</Typography>
+              </IconButton>
+
+              {onTextSpeak && (
+                <IconButton
+                  size='sm'
+                  variant='plain'
+                  color='neutral'
+                  onClick={(e) => { e.preventDefault(); onTextSpeak(fragmentFlattenedText.trim()); }}
+                  disabled={props.isSpeaking}
+                  sx={{
+                    color: 'text.secondary',
+                    borderRadius: 'md',
+                    px: 1.5,
+                    py: 0.5,
+                    fontSize: 'xs',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    minHeight: '1.75rem',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    backgroundColor: 'background.surface',
+                    transition: 'all 0.16s ease',
+                    '&:hover': { 
+                      color: 'primary.solidBg', 
+                      borderColor: 'primary.solidBg',
+                      backgroundColor: 'background.level1',
+                      transform: 'translateY(-1px)'
+                    },
+                  }}
+                >
+                  {!props.isSpeaking ? <PhVoice sx={{ fontSize: '0.875rem' }} /> : <CircularProgress sx={{ '--CircularProgress-size': '12px', color: 'primary.solidBg' }} />}
+                  <Typography level='body-xs' sx={{ fontWeight: 600, color: 'inherit' }}>Leer en voz</Typography>
+                </IconButton>
+              )}
+            </Box>
+          )}
 
         </Box>
 

@@ -101,7 +101,7 @@ const useAppChatStore = create<AppChatStore>()(persist(
 
     // Chat AI
 
-    autoSpeak: 'off',
+    autoSpeak: 'all',
     setAutoSpeak: (autoSpeak: ChatAutoSpeakType) => _set({ autoSpeak }),
 
     autoSuggestAttachmentPrompts: false,
