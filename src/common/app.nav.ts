@@ -16,6 +16,7 @@ import { DiscordIcon } from '~/common/components/icons/3rdparty/DiscordIcon';
 // Modal icons
 import BuildCircleIcon from '@mui/icons-material/BuildCircle';
 import SettingsIcon from '@mui/icons-material/Settings';
+import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
 
 
 import { Brand } from '~/common/app.config';
@@ -85,21 +86,31 @@ export const navItems: {
   // User-chosen apps
   apps: [
     {
-      name: 'Chat',
+      name: 'Asistente',
       icon: PhChats, // was: TextsmsOutlinedIcon
       iconActive: PhChatsDuotone, // was: TextsmsIcon
       type: 'app',
       route: '/',
     },
     {
-      name: 'Call',
-      barTitle: 'Voice Calls',
+      name: 'Voz',
+      barTitle: 'Conversación por voz',
       icon: CallOutlinedIcon,
       iconActive: CallIcon,
       type: 'app',
       route: '/call',
       hideDrawer: true,
       panelAsMenu: true,
+      fullWidth: true,
+    },
+    {
+      name: 'Georgie local',
+      mobileName: 'Georgie',
+      barTitle: 'GK Smart Router',
+      icon: SmartToyOutlinedIcon,
+      type: 'app',
+      route: '/georgie',
+      hideDrawer: true,
       fullWidth: true,
     },
     // {
@@ -157,6 +168,7 @@ export const navItems: {
       type: 'app',
       route: '/personas',
       hideBar: true,
+      _delete: true,
     },
     {
       name: 'Compare Text',
@@ -209,6 +221,7 @@ export const navItems: {
       hideBar: true,
       hideDrawer: true,
       hideOnMobile: true,
+      hideIcon: true,
     },
   ],
 
