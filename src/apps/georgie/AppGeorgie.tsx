@@ -311,16 +311,21 @@ export function AppGeorgie() {
     try {
       let responseText = '';
       let audioUrl: string | undefined;
+      let providerError = '';
       const useLocal = !imageAttachments.length && LOCAL_ACTION_PATTERN.test(cleanText) && !providerFromCommand(cleanText);
 
       if (!useLocal) {
-        const route = await askGKing(requestText, imageAttachments);
+        const route = await askGKing(requestText, imageAttachments, requestKind);
         if (route.available && (route.response || route.mediaCreated)) {
           responseText = route.response || (route.mediaCreated === 'video' ? 'Listo. Creé el video.' : 'Listo. Creé la imagen.');
-          setActivity('Respuesta lista');
+          setActivity(route.retries
+            ? `Respuesta lista · cambié a ${route.model ?? 'otro modelo'}`
+            : 'Respuesta lista');
         }
-        if (!route.available && route.errors?.length)
+        if (!route.available && route.errors?.length) {
+          providerError = route.errors.join('\n');
           console.warn('[Jorgis] El modelo nativo no completó la solicitud.', { errors: route.errors });
+        }
       }
 
       if (!responseText && imageAttachments.length)
@@ -346,6 +351,8 @@ export function AppGeorgie() {
         if (data.refresh_dashboard) void checkHealth();
       }
 
+      if (!responseText && providerError)
+        throw new Error(providerError);
       if (!responseText && requestKind === 'image')
         throw new Error('El modelo activo no generó una imagen. Selecciona un modelo de imágenes de OpenAI o Gemini.');
       if (!responseText && (requestKind === 'video' || requestKind === 'music'))

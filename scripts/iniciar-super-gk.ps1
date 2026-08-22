@@ -1,5 +1,4 @@
 $ErrorActionPreference = 'Stop'
-Add-Type -AssemblyName System.Net.Http -ErrorAction Stop
 
 $runtimeRoot = Join-Path $env:LOCALAPPDATA 'SuperGK'
 New-Item -ItemType Directory -Path $runtimeRoot -Force | Out-Null
@@ -34,20 +33,21 @@ function Test-HttpReady {
     [int]$TimeoutMilliseconds = 2000
   )
 
-  $handler = [System.Net.Http.HttpClientHandler]::new()
-  $handler.UseProxy = $false
-  $client = [System.Net.Http.HttpClient]::new($handler)
+  $request = [System.Net.WebRequest]::Create($Uri)
+  $request.Method = 'GET'
+  $request.Proxy = $null
+  $request.Timeout = $TimeoutMilliseconds
+  $request.ReadWriteTimeout = $TimeoutMilliseconds
   $response = $null
   try {
-    $client.Timeout = [TimeSpan]::FromMilliseconds($TimeoutMilliseconds)
-    $response = $client.GetAsync($Uri).GetAwaiter().GetResult()
-    return $response.IsSuccessStatusCode
+    $response = $request.GetResponse()
+    $statusCode = [int]$response.StatusCode
+    return $statusCode -ge 200 -and $statusCode -lt 400
   } catch {
     return $false
   } finally {
-    if ($null -ne $response) { $response.Dispose() }
-    $client.Dispose()
-    $handler.Dispose()
+    if ($null -ne $response) { $response.Close() }
+    $request.Abort()
   }
 }
 
@@ -64,6 +64,19 @@ function Wait-HttpReady {
   } while ([DateTime]::UtcNow -lt $deadline)
   return $false
 }
+
+$launcherMutex = [System.Threading.Mutex]::new($false, 'Local\SuperGKLauncher')
+$ownsLauncherMutex = $false
+try {
+  try {
+    $ownsLauncherMutex = $launcherMutex.WaitOne(0)
+  } catch [System.Threading.AbandonedMutexException] {
+    $ownsLauncherMutex = $true
+  }
+  if (-not $ownsLauncherMutex) {
+    Write-LaunchLog 'Ya existe un inicio de Super GK en curso; se omitió el duplicado.'
+    return
+  }
 
 Write-LaunchLog 'Inicio solicitado.'
 $superGkRoot = Split-Path -Parent $PSScriptRoot
@@ -108,7 +121,7 @@ if (-not (Wait-HttpReady -Uri 'http://127.0.0.1:8000/api/health' -TimeoutSeconds
 }
 Write-LaunchLog 'Georgie listo.'
 
-$webReady = Test-HttpReady -Uri 'http://127.0.0.1:3000/api/georgie/health'
+$webReady = Test-HttpReady -Uri 'http://127.0.0.1:3000/georgie'
 if (-not $webReady) {
   # A running Next.js server may briefly stop answering while it recompiles.
   # If the port is already listening, let the readiness loop below wait for it
@@ -127,10 +140,10 @@ if (-not $webReady) {
     Write-LaunchLog 'El puerto 3000 ya escucha; esperando una instancia de Next.js que está compilando.'
   }
 }
-if (-not (Wait-HttpReady -Uri 'http://127.0.0.1:3000/api/georgie/health' -TimeoutSeconds 180)) {
+if (-not (Wait-HttpReady -Uri 'http://127.0.0.1:3000/georgie' -TimeoutSeconds 180)) {
   throw 'Super GK no respondió después de 3 minutos. El servicio web del puerto 3000 no está listo.'
 }
-Write-LaunchLog 'Next.js y la API de Super GK están listos.'
+Write-LaunchLog 'Next.js y la interfaz de Super GK están listos.'
 
 $superGkUrl = 'http://127.0.0.1:3000/georgie'
 $chromePaths = @(
@@ -169,4 +182,8 @@ if ($chrome) {
 } else {
   Start-Process $superGkUrl
   Write-LaunchLog 'URL iniciada con el navegador predeterminado; Chrome no está instalado.'
+}
+} finally {
+  if ($ownsLauncherMutex) { $launcherMutex.ReleaseMutex() }
+  $launcherMutex.Dispose()
 }
