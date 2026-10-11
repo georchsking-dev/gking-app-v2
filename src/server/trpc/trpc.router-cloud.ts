@@ -1,16 +1,25 @@
-import { createTRPCRouter } from './trpc.server';
-
+import * as z from 'zod/v4';
+import { createTRPCRouter, publicProcedure } from './trpc.server';
+import { backendRouter } from '~/modules/backend/backend.router';
 import { browseRouter } from '~/modules/browse/browse.router';
-import { tradeRouter } from '~/modules/trade/server/trade.router';
 
-/**
- * Cloud rooter, which is geolocated in 1 location and separate from the other routers.
- * NOTE: at the time of writing, the location is aws|us-east-1
- */
+const tradeRouter = createTRPCRouter({
+  storageGet: publicProcedure
+    .input(z.object({ objectId: z.string().nullable() }))
+    .query(async () => {
+      return { type: 'error' as const, error: 'Database storage not configured' };
+    }),
+  storageDelete: publicProcedure
+    .input(z.object({ objectId: z.string(), deletionKey: z.string() }))
+    .mutation(async () => {
+      return { type: 'error' as const, error: 'Database storage not configured' };
+    }),
+});
+
 export const appRouterCloud = createTRPCRouter({
+  backend: backendRouter,
   browse: browseRouter,
   trade: tradeRouter,
 });
 
-// export type definition of API
 export type AppRouterCloud = typeof appRouterCloud;

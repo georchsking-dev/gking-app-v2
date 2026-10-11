@@ -21,20 +21,15 @@ process.env.NEXT_PUBLIC_DEPLOYMENT_TYPE = process.env.NEXT_PUBLIC_DEPLOYMENT_TYP
 console.log(` 🧠 \x1b[1mbig-AGI\x1b[0m v${process.env.NEXT_PUBLIC_BUILD_PKGVER} (@${process.env.NEXT_PUBLIC_BUILD_HASH}${process.env.VERCEL_ENV ? `, \x1b[2mV:\x1b[0m${process.env.VERCEL_ENV}` : ''}, \x1b[2mN:\x1b[0m${process.env.NODE_ENV})`);
 
 // Non-default build types
-const buildType =
-  process.env.BIG_AGI_BUILD === 'standalone' ? 'standalone' as const
-    : process.env.BIG_AGI_BUILD === 'static' ? 'export' as const
-      : undefined;
-
-buildType && console.log(` 🧠 big-AGI: building for ${buildType}...\n`);
+const isStaticExport = process.env.BIG_AGI_BUILD === 'static';
 
 /** @type {import('next').NextConfig} */
 let nextConfig: NextConfig = {
+  output: isStaticExport ? 'export' : 'standalone',
   reactStrictMode: !process.env.NO_STRICT_MODE, // default: enabled
 
   // [exports] https://nextjs.org/docs/advanced-features/static-html-export
-  ...(buildType && {
-    output: buildType,
+  ...(isStaticExport && {
     distDir: 'dist',
 
     // disable image optimization for exports
@@ -122,7 +117,7 @@ let nextConfig: NextConfig = {
 };
 
 // Validate environment variables at build time, if required. Server env vars will be actually read and used at runtime (cloud/edge).
-import { env as validateEnv } from '~/server/env.server';
+import { env as validateEnv } from './src/server/env.server';
 void validateEnv; // Triggers env validation - throws if required vars are missing
 
 // PostHog error reporting with source maps for production builds

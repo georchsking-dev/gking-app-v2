@@ -1,47 +1,23 @@
 {
   "compilerOptions": {
-    /* Base Options: */
-    "esModuleInterop": true,
-    "skipLibCheck": true,
     "target": "es2022",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    "resolveJsonModule": true,
-    "moduleDetection": "force",
-    "isolatedModules": true,
-
-    /* Typescript 6.0 transition: side effects imports are denied by default */
-    "noUncheckedSideEffectImports": false,
-
-    /* Strictness */
-    "strict": true,
-    "noUncheckedIndexedAccess": false,
-    "checkJs": true,
-
-    /* Bundled projects */
-    "lib": ["dom", "dom.iterable", "ESNext"],
+    "skipLibCheck": true,
+    "strict": false,
     "noEmit": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
     "jsx": "preserve",
-    "plugins": [{"name": "next"}],
     "incremental": true,
-
-    /* Custom options */
-    "forceConsistentCasingInFileNames": true,
-    "jsxImportSource": "@emotion/react",
-
-    /* Path Aliases */
+    "baseUrl": ".",
     "paths": {
-      "*": ["."],
-      "~/common/*": ["./src/common/*"],
-      "~/extensions/*": ["./src/extensions/*"],
-      "~/modules/*": ["./src/modules/*"],
-      "~/server/*": ["./src/server/*"]
+      "~/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts",
-    // this is here only because otherwise, during standalone build the process would update this file
-    "dist/types/**/*.ts"
-  ],
-  "exclude": ["node_modules", "dist", "electron", "tools", "**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/unused/**"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
 }

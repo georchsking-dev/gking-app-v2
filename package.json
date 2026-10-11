@@ -6,19 +6,13 @@
   "homepage": "https://big-agi.com",
   "repository": "https://github.com/enricoros/big-agi",
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev -p 3000 -H 0.0.0.0",
     "dev-debug": "cross-env NODE_OPTIONS='--inspect' next dev",
     "dev-https": "next dev --experimental-https",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3000 -H 0.0.0.0",
     "lint": "next lint",
-    "tsclint": "tsc --noEmit --pretty",
-    "postinstall": "prisma generate --no-hints",
-    "gen:icon-sprites": "node tools/develop/gen-icon-sprites/generate-llm-sprites.ts",
-    "db:push": "prisma db push",
-    "db:studio": "prisma studio",
-    "vercel:env:pull": "npx vercel env pull .env.development.local",
-    "sharp:win32_x64": "npm install --os=win32 --cpu=x64 sharp"
+    "tsclint": "tsc --noEmit --pretty"
   },
   "prisma": {
     "schema": "src/server/prisma/schema.prisma"

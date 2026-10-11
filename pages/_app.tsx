@@ -7,9 +7,9 @@ import { Brand } from '~/common/app.config';
 import { apiQuery } from '~/common/util/trpc.client';
 
 
-// [server-client-safe] dynamic imports to avoid webpack bundling issues with next/navigation
-const VercelAnalytics = dynamic(() => import('@vercel/analytics/next').then(mod => mod.Analytics), { ssr: false });
-const VercelSpeedInsights = dynamic(() => import('@vercel/speed-insights/next').then(mod => mod.SpeedInsights), { ssr: false });
+// [AI Studio] Stripped Vercel analytics
+const VercelAnalytics = () => null;
+const VercelSpeedInsights = () => null;
 
 
 import 'katex/dist/katex.min.css';

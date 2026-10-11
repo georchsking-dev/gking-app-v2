@@ -1,30 +1,4 @@
-import type { AixAPI_Access } from '~/modules/aix/server/api/aix.wiretypes';
-
-import { ModelVendorAlibaba } from './alibaba/alibaba.vendor';
-import { ModelVendorAnthropic } from './anthropic/anthropic.vendor';
-import { ModelVendorAzure } from './azure/azure.vendor';
-import { ModelVendorBedrock } from './bedrock/bedrock.vendor';
-import { ModelVendorCerebras } from './cerebras/cerebras.vendor';
-import { ModelVendorCohere } from './cohere/cohere.vendor';
-import { ModelVendorDeepseek } from './deepseek/deepseekai.vendor';
-import { ModelVendorGemini } from './gemini/gemini.vendor';
-import { ModelVendorGroq } from './groq/groq.vendor';
-import { ModelVendorLMStudio } from './lmstudio/lmstudio.vendor';
-import { ModelVendorLocalAI } from './localai/localai.vendor';
-import { ModelVendorMistral } from './mistral/mistral.vendor';
-import { ModelVendorMoonshot } from './moonshot/moonshot.vendor';
-import { ModelVendorOllama } from './ollama/ollama.vendor';
-import { ModelVendorOpenAI } from './openai/openai.vendor';
-import { ModelVendorOpenRouter } from './openrouter/openrouter.vendor';
-import { ModelVendorPerplexity } from './perplexity/perplexity.vendor';
-import { ModelVendorSakanaAI } from './sakanaai/sakanaai.vendor';
-import { ModelVendorTogetherAI } from './togetherai/togetherai.vendor';
-import { ModelVendorXAI } from './xai/xai.vendor';
-import { ModelVendorZAI } from './zai/zai.vendor';
-import { ModelVendorHuggingFace } from './huggingface/huggingface.vendor';
-
 import type { IModelVendor } from './IModelVendor';
-
 
 export type ModelVendorId =
   | 'alibaba'
@@ -48,54 +22,207 @@ export type ModelVendorId =
   | 'togetherai'
   | 'xai'
   | 'zai'
-  | 'huggingface'
-  ;
+  | 'huggingface';
 
-/** Global: Vendor Instances Registry (`satisfies` validates keys, TS preserves specific vendor types) **/
-const MODEL_VENDOR_REGISTRY = {
-  alibaba: ModelVendorAlibaba,
-  anthropic: ModelVendorAnthropic,
-  azure: ModelVendorAzure,
-  bedrock: ModelVendorBedrock,
-  cerebras: ModelVendorCerebras,
-  cohere: ModelVendorCohere,
-  deepseek: ModelVendorDeepseek,
-  googleai: ModelVendorGemini,
-  groq: ModelVendorGroq,
-  lmstudio: ModelVendorLMStudio,
-  localai: ModelVendorLocalAI,
-  mistral: ModelVendorMistral,
-  moonshot: ModelVendorMoonshot,
-  ollama: ModelVendorOllama,
-  openai: ModelVendorOpenAI,
-  openrouter: ModelVendorOpenRouter,
-  perplexity: ModelVendorPerplexity,
-  sakanaai: ModelVendorSakanaAI,
-  togetherai: ModelVendorTogetherAI,
-  xai: ModelVendorXAI,
-  zai: ModelVendorZAI,
-  huggingface: ModelVendorHuggingFace,
-} as const satisfies Record<ModelVendorId, IModelVendor>;
+export const ModelVendors: Record<ModelVendorId, IModelVendor> = {
+  openai: {
+    id: 'openai',
+    name: 'OpenAI',
+    location: 'cloud',
+    displayGroup: 'popular',
+    displayRank: 10,
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  anthropic: {
+    id: 'anthropic',
+    name: 'Anthropic',
+    location: 'cloud',
+    displayGroup: 'popular',
+    displayRank: 20,
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  googleai: {
+    id: 'googleai',
+    name: 'Gemini',
+    location: 'cloud',
+    displayGroup: 'popular',
+    displayRank: 30,
+    hasFreeModels: true,
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  openrouter: {
+    id: 'openrouter',
+    name: 'OpenRouter',
+    location: 'cloud',
+    displayGroup: 'popular',
+    displayRank: 40,
+    hasFreeModels: true,
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  deepseek: {
+    id: 'deepseek',
+    name: 'DeepSeek',
+    location: 'cloud',
+    displayGroup: 'popular',
+    displayRank: 50,
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  groq: {
+    id: 'groq',
+    name: 'Groq',
+    location: 'cloud',
+    displayGroup: 'popular',
+    displayRank: 60,
+    hasFreeModels: true,
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  ollama: {
+    id: 'ollama',
+    name: 'Ollama',
+    location: 'local',
+    displayGroup: 'local',
+    displayRank: 10,
+    hasFreeModels: true,
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  lmstudio: {
+    id: 'lmstudio',
+    name: 'LM Studio',
+    location: 'local',
+    displayGroup: 'local',
+    displayRank: 20,
+    hasFreeModels: true,
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  localai: {
+    id: 'localai',
+    name: 'LocalAI',
+    location: 'local',
+    displayGroup: 'local',
+    displayRank: 30,
+    hasFreeModels: true,
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  alibaba: {
+    id: 'alibaba',
+    name: 'Alibaba Cloud',
+    location: 'cloud',
+    displayGroup: 'cloud',
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  azure: {
+    id: 'azure',
+    name: 'Azure OpenAI',
+    location: 'cloud',
+    displayGroup: 'cloud',
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  bedrock: {
+    id: 'bedrock',
+    name: 'AWS Bedrock',
+    location: 'cloud',
+    displayGroup: 'cloud',
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  cerebras: {
+    id: 'cerebras',
+    name: 'Cerebras',
+    location: 'cloud',
+    displayGroup: 'cloud',
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  cohere: {
+    id: 'cohere',
+    name: 'Cohere',
+    location: 'cloud',
+    displayGroup: 'cloud',
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  mistral: {
+    id: 'mistral',
+    name: 'Mistral',
+    location: 'cloud',
+    displayGroup: 'cloud',
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  moonshot: {
+    id: 'moonshot',
+    name: 'Moonshot',
+    location: 'cloud',
+    displayGroup: 'cloud',
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  perplexity: {
+    id: 'perplexity',
+    name: 'Perplexity',
+    location: 'cloud',
+    displayGroup: 'cloud',
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  sakanaai: {
+    id: 'sakanaai',
+    name: 'Sakana AI',
+    location: 'cloud',
+    displayGroup: 'cloud',
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  togetherai: {
+    id: 'togetherai',
+    name: 'Together AI',
+    location: 'cloud',
+    displayGroup: 'cloud',
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  xai: {
+    id: 'xai',
+    name: 'xAI',
+    location: 'cloud',
+    displayGroup: 'cloud',
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  zai: {
+    id: 'zai',
+    name: 'Z-AI',
+    location: 'cloud',
+    displayGroup: 'cloud',
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+  huggingface: {
+    id: 'huggingface',
+    name: 'Hugging Face',
+    location: 'cloud',
+    displayGroup: 'cloud',
+    getTransportAccess: (setup) => setup || {},
+    rpcUpdateModelsOrThrow: async () => ({ models: [] }),
+  },
+};
 
-
-// --- Type Helpers - for Id -> concrete type mappings ---
-// NOTE: we haven't ported the full system to type inference, this is just a way forward
-export type ModelVendorOf<V extends ModelVendorId> = (typeof MODEL_VENDOR_REGISTRY)[V];
-export type ModelVendorAccessOf<V extends ModelVendorId> = ModelVendorOf<V> extends IModelVendor<any, infer TAccess> ? TAccess : never;
-
+export function findModelVendor(vendorId: string | undefined): IModelVendor | null {
+  if (!vendorId) return null;
+  return ModelVendors[vendorId as ModelVendorId] ?? null;
+}
 
 export function findAllModelVendors(): IModelVendor[] {
-  const modelVendors = Object.values(MODEL_VENDOR_REGISTRY);
-  modelVendors.sort((a, b) => a.displayRank - b.displayRank);
-  return modelVendors;
+  return Object.values(ModelVendors);
 }
-
-export function findModelVendor<TServiceSettings extends object = {}, TAccess = AixAPI_Access>(
-  vendorId?: ModelVendorId,
-): IModelVendor<TServiceSettings, TAccess> | null {
-  return vendorId ? (MODEL_VENDOR_REGISTRY[vendorId] as IModelVendor<TServiceSettings, TAccess>) ?? null : null;
-}
-
-// export function getDefaultModelVendor(): IModelVendor {
-//   return MODEL_VENDOR_REGISTRY.openai;
-// }

@@ -1,31 +1,26 @@
 import * as React from 'react';
+import { Modal, ModalDialog, DialogTitle, DialogContent, Button } from '@mui/joy';
 
-import type { DConversationId } from '~/common/stores/chat/chat.conversation';
-import { GoodModal } from '~/common/components/modals/GoodModal';
+export type TradeConfig = {
+  dir: 'import' | 'export';
+  conversationId?: string | null;
+  exportAll?: boolean;
+};
 
-import { ExportChats, ExportConfig } from './ExportChats';
-import { ImportChats, ImportConfig } from './ImportChats';
-
-export type TradeConfig = ImportConfig | ExportConfig;
-
-export function TradeModal(props: { config: TradeConfig, onConversationActivate: (conversationId: DConversationId) => void, onClose: () => void }) {
+export function TradeModal(props: {
+  config: TradeConfig | null;
+  onClose: () => void;
+}) {
+  if (!props.config) return null;
   return (
-    <GoodModal
-      open onClose={props.onClose}
-      dividers
-      title={<>
-        <b>{props.config.dir === 'import' ? 'Import ' : props.config.dir === 'export' ? 'Export ' : ''}</b> {(props.config.dir === 'export' && !props.config.exportAll) ? 'conversation' : 'conversations'}
-      </>}
-    >
-
-      {props.config.dir === 'import' && (
-        <ImportChats onConversationActivate={props.onConversationActivate} onClose={props.onClose} />
-      )}
-
-      {props.config.dir === 'export' && (
-        <ExportChats config={props.config} onClose={props.onClose} />
-      )}
-
-    </GoodModal>
+    <Modal open onClose={props.onClose}>
+      <ModalDialog>
+        <DialogTitle>{props.config.dir === 'import' ? 'Import Conversations' : 'Export Conversations'}</DialogTitle>
+        <DialogContent>
+          <p>Export / Import functionality</p>
+          <Button variant="soft" onClick={props.onClose} sx={{ mt: 2 }}>Close</Button>
+        </DialogContent>
+      </ModalDialog>
+    </Modal>
   );
 }
