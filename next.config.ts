@@ -21,11 +21,12 @@ process.env.NEXT_PUBLIC_DEPLOYMENT_TYPE = process.env.NEXT_PUBLIC_DEPLOYMENT_TYP
 console.log(` 🧠 \x1b[1mbig-AGI\x1b[0m v${process.env.NEXT_PUBLIC_BUILD_PKGVER} (@${process.env.NEXT_PUBLIC_BUILD_HASH}${process.env.VERCEL_ENV ? `, \x1b[2mV:\x1b[0m${process.env.VERCEL_ENV}` : ''}, \x1b[2mN:\x1b[0m${process.env.NODE_ENV})`);
 
 // Non-default build types
+const isVercel = Boolean(process.env.VERCEL);
 const isStaticExport = process.env.BIG_AGI_BUILD === 'static';
 
 /** @type {import('next').NextConfig} */
 let nextConfig: NextConfig = {
-  output: isStaticExport ? 'export' : 'standalone',
+  ...(isStaticExport ? { output: 'export' } : isVercel ? {} : { output: 'standalone' }),
   reactStrictMode: !process.env.NO_STRICT_MODE, // default: enabled
 
   // [exports] https://nextjs.org/docs/advanced-features/static-html-export
