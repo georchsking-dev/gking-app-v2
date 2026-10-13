@@ -1,0 +1,7 @@
+{
+  "name": "Big-AGI",
+  "description": "Personal AI suite for interacting with large language models, creative tools, personas, and workflows.",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

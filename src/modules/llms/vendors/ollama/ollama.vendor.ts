@@ -1,0 +1,4 @@
+import type { IModelVendor } from '../IModelVendor';
+import { ModelVendors } from '../vendors.registry';
+
+export const ModelVendorOllama: IModelVendor = ModelVendors.ollama;
