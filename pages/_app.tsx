@@ -8,8 +8,8 @@ import { apiQuery } from '~/common/util/trpc.client';
 
 
 // [AI Studio] Stripped Vercel analytics
-const VercelAnalytics = () => null;
-const VercelSpeedInsights = () => null;
+const VercelAnalytics = (_props: { debug?: boolean }) => null;
+const VercelSpeedInsights = (_props: { debug?: boolean; sampleRate?: number }) => null;
 
 
 import 'katex/dist/katex.min.css';

@@ -38,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         endpoint = `${endpoint}/chat/completions`;
       }
 
-      const oaiMessages = [];
+      const oaiMessages: any[] = [];
       if (systemInstruction) {
         oaiMessages.push({ role: 'system', content: systemInstruction });
       }

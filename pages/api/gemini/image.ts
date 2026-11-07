@@ -78,11 +78,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
 
       if (imgRes.generatedImages && imgRes.generatedImages.length > 0) {
-        const b64 = imgRes.generatedImages[0].image.imageBytes;
-        return res.status(200).json({
-          imageUrl: `data:image/jpeg;base64,${b64}`,
-          model: 'gemini-nano-banana-2.1',
-        });
+        const b64 = imgRes.generatedImages[0]?.image?.imageBytes;
+        if (b64) {
+          return res.status(200).json({
+            imageUrl: `data:image/jpeg;base64,${b64}`,
+            model: 'gemini-nano-banana-2.1',
+          });
+        }
       }
     } catch (imagenErr: any) {
       console.warn('generateImages call:', imagenErr?.message);
