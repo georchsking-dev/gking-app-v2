@@ -21,7 +21,6 @@ import {
   Wand2,
   RefreshCw,
   Download,
-  SlidersHorizontal,
   Code2,
   BookOpen,
   PenTool,
@@ -142,7 +141,6 @@ export function GeminiUI(props: { onSwitchToClassic?: () => void }) {
   const [selectedModel, setSelectedModel] = React.useState('gemini-3.5-flash');
   const [selectedRole, setSelectedRole] = React.useState(ROLES[0].id);
   const [isModelMenuOpen, setIsModelMenuOpen] = React.useState(false);
-  const [isRoleMenuOpen, setIsRoleMenuOpen] = React.useState(false);
 
   // 9Router Modal
   const [is9RouterOpen, setIs9RouterOpen] = React.useState(false);
@@ -170,7 +168,23 @@ export function GeminiUI(props: { onSwitchToClassic?: () => void }) {
     ];
   });
   const [currentChatId, setCurrentChatId] = React.useState('default');
-  const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  // Mobile-first: detect a narrow viewport (SSR-safe, window only on client)
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  // On mobile the sidebar starts closed so it never squeezes the chat
+  const [sidebarOpen, setSidebarOpen] = React.useState(
+    () => (typeof window !== 'undefined' ? window.innerWidth > 768 : true),
+  );
+  React.useEffect(() => {
+    if (isMobile) setSidebarOpen(false);
+  }, [isMobile]);
 
   // Chat inputs
   const [inputPrompt, setInputPrompt] = React.useState('');
@@ -481,11 +495,63 @@ export function GeminiUI(props: { onSwitchToClassic?: () => void }) {
   const textSecondary = isDark ? '#9AA0A6' : '#5F6368';
   const borderCol = isDark ? '#2D2F31' : '#E0E2E7';
 
+  // Mode chips (Chat / Imagen / Video / Live) — small row above the chat input,
+  // horizontally scrollable on mobile. Replaces the old 4-button pill in the header.
+  const MODE_CHIPS = [
+    { id: 'chat' as const, label: 'Chat', icon: MessageSquare, color: '#2563EB' },
+    { id: 'image' as const, label: 'Imagen', icon: ImageIcon, color: '#4F46E5' },
+    { id: 'video' as const, label: 'Video', icon: Video, color: '#9333EA' },
+    { id: 'live' as const, label: 'Live', icon: Mic, color: '#D97706' },
+  ];
+  const modeChips = (
+    <div
+      style={{
+        display: 'flex',
+        gap: '8px',
+        overflowX: 'auto',
+        padding: '4px 2px 8px 2px',
+        flexShrink: 0,
+        scrollbarWidth: 'none',
+      }}
+    >
+      {MODE_CHIPS.map((chip) => {
+        const ChipIcon = chip.icon;
+        const selected = activeMode === chip.id;
+        return (
+          <button
+            key={chip.id}
+            onClick={() => setActiveMode(chip.id)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '9999px',
+              fontSize: '12px',
+              fontWeight: 600,
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              cursor: 'pointer',
+              border: `1px solid ${selected ? chip.color : borderCol}`,
+              backgroundColor: selected ? chip.color : 'transparent',
+              color: selected ? '#FFFFFF' : textSecondary,
+            }}
+          >
+            <ChipIcon style={{ width: '14px', height: '14px' }} />
+            <span>{chip.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div
       style={{
         backgroundColor: bgMain,
         color: textPrimary,
+        width: '100%',
+        maxWidth: '100vw',
         height: '100vh',
         maxHeight: '100vh',
         display: 'flex',
@@ -494,22 +560,35 @@ export function GeminiUI(props: { onSwitchToClassic?: () => void }) {
         fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
       }}
     >
-      {/* 1. Header (Gemini Minimalist & Elegant) */}
+      {/* 1. Header — simple, ChatGPT-style: menu + logo + model | new chat + theme */}
       <header
         style={{
-          height: '60px',
+          height: '56px',
+          minHeight: '56px',
           borderBottom: `1px solid ${borderCol}`,
           backgroundColor: bgCard,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 16px',
+          padding: isMobile ? '0 8px' : '0 16px',
+          gap: '8px',
           zIndex: 30,
           flexShrink: 0,
+          minWidth: 0,
+          overflow: 'hidden',
         }}
       >
-        {/* Left: Sidebar toggle + GK Emblem & Gemini text */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Left: sidebar toggle + GK logo + model selector (short name, ellipsized) */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: isMobile ? '6px' : '10px',
+            minWidth: 0,
+            flex: 1,
+            overflow: 'hidden',
+          }}
+        >
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             style={{
@@ -521,237 +600,81 @@ export function GeminiUI(props: { onSwitchToClassic?: () => void }) {
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
+              flexShrink: 0,
             }}
-            title="Barra lateral"
+            title="Menú"
           >
             <Menu style={{ width: '20px', height: '20px' }} />
           </button>
 
-          {/* Golden GK Logo Emblem (Vintage Mic & Golden Letters) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div
+          {/* Golden GK logo emblem */}
+          <div
+            style={{
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #FDE68A 0%, #D97706 50%, #78350F 100%)',
+              boxShadow: '0 2px 10px rgba(217, 119, 6, 0.35)',
+              border: '2px solid rgba(253, 230, 138, 0.5)',
+              flexShrink: 0,
+            }}
+          >
+            <span style={{ fontFamily: 'Georgia, serif', fontWeight: 900, color: '#FFF', fontSize: '13px' }}>
+              GK
+            </span>
+            <Mic
               style={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #FDE68A 0%, #D97706 50%, #78350F 100%)',
-                boxShadow: '0 2px 10px rgba(217, 119, 6, 0.35)',
-                border: '2px solid rgba(253, 230, 138, 0.5)',
+                position: 'absolute',
+                top: '-4px',
+                right: '-4px',
+                width: '13px',
+                height: '13px',
+                color: '#451A03',
               }}
-            >
-              <span style={{ fontFamily: 'Georgia, serif', fontWeight: 900, color: '#FFF', fontSize: '15px' }}>
-                GK
-              </span>
-              <Mic
-                style={{
-                  position: 'absolute',
-                  top: '-4px',
-                  right: '-4px',
-                  width: '14px',
-                  height: '14px',
-                  color: '#451A03',
-                }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span
-                style={{
-                  fontWeight: 700,
-                  fontSize: '18px',
-                  letterSpacing: '-0.02em',
-                  background: 'linear-gradient(90deg, #60A5FA, #818CF8, #F59E0B)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                Gemini
-              </span>
-              <span
-                style={{
-                  fontSize: '11px',
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  fontWeight: 600,
-                  backgroundColor: isDark ? 'rgba(217, 119, 6, 0.2)' : '#FEF3C7',
-                  color: isDark ? '#FCD34D' : '#92400E',
-                }}
-              >
-                GKing
-              </span>
-            </div>
+            />
           </div>
-        </div>
 
-        {/* Center: Prominent Creative Mode Switchers */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: '4px',
-            borderRadius: '9999px',
-            backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-            border: `1px solid ${borderCol}`,
-          }}
-        >
-          <button
-            onClick={() => setActiveMode('chat')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 14px',
-              borderRadius: '9999px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              border: 'none',
-              transition: 'all 0.2s',
-              backgroundColor: activeMode === 'chat' ? '#2563EB' : 'transparent',
-              color: activeMode === 'chat' ? '#FFFFFF' : textSecondary,
-            }}
-          >
-            <MessageSquare style={{ width: '14px', height: '14px' }} />
-            <span>Chat</span>
-          </button>
-
-          <button
-            onClick={() => setActiveMode('image')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 14px',
-              borderRadius: '9999px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              border: 'none',
-              transition: 'all 0.2s',
-              backgroundColor: activeMode === 'image' ? '#4F46E5' : 'transparent',
-              color: activeMode === 'image' ? '#FFFFFF' : textSecondary,
-            }}
-          >
-            <ImageIcon style={{ width: '14px', height: '14px' }} />
-            <span>Imagen Studio</span>
-          </button>
-
-          <button
-            onClick={() => setActiveMode('video')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 14px',
-              borderRadius: '9999px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              border: 'none',
-              transition: 'all 0.2s',
-              backgroundColor: activeMode === 'video' ? '#9333EA' : 'transparent',
-              color: activeMode === 'video' ? '#FFFFFF' : textSecondary,
-            }}
-          >
-            <Video style={{ width: '14px', height: '14px' }} />
-            <span>Veo 3 Video</span>
-          </button>
-
-          <button
-            onClick={() => setActiveMode('live')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 14px',
-              borderRadius: '9999px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              border: 'none',
-              transition: 'all 0.2s',
-              backgroundColor: activeMode === 'live' ? '#D97706' : 'transparent',
-              color: activeMode === 'live' ? '#FFFFFF' : textSecondary,
-            }}
-          >
-            <Mic style={{ width: '14px', height: '14px' }} />
-            <span>Gemini Live</span>
-          </button>
-        </div>
-
-        {/* Right: 9Router + Model Selector + Dark/Light Theme */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {/* 9Router Button */}
-          <button
-            onClick={() => setIs9RouterOpen(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              borderRadius: '12px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              border: `1px solid ${nineRouterConfig.enabled ? 'rgba(249, 115, 22, 0.4)' : borderCol}`,
-              backgroundColor: nineRouterConfig.enabled ? 'rgba(249, 115, 22, 0.15)' : 'transparent',
-              color: nineRouterConfig.enabled ? '#FB923C' : textSecondary,
-            }}
-            title="Configurar 9Router Proxy"
-          >
-            <Network style={{ width: '14px', height: '14px' }} />
-            <span>9Router</span>
-            {nineRouterConfig.enabled && (
-              <span
-                style={{
-                  width: '7px',
-                  height: '7px',
-                  borderRadius: '50%',
-                  backgroundColor: '#34D399',
-                  boxShadow: '0 0 8px #34D399',
-                }}
-              />
-            )}
-          </button>
-
-          {/* Model Selector */}
-          <div style={{ position: 'relative' }}>
+          {/* Model selector (compact) */}
+          <div style={{ position: 'relative', minWidth: 0 }}>
             <button
               onClick={() => {
                 setIsModelMenuOpen(!isModelMenuOpen);
-                setIsRoleMenuOpen(false);
               }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
+                gap: '4px',
+                padding: '6px 8px',
                 borderRadius: '12px',
-                fontSize: '12px',
+                fontSize: '13px',
                 fontWeight: 600,
                 cursor: 'pointer',
-                border: `1px solid ${borderCol}`,
-                backgroundColor: bgCard,
+                border: 'none',
+                background: 'transparent',
                 color: textPrimary,
+                minWidth: 0,
+                maxWidth: isMobile ? '150px' : '220px',
               }}
             >
-              <Sparkles style={{ width: '13px', height: '13px', color: '#60A5FA' }} />
-              <span>{MODELS.find((m) => m.id === selectedModel)?.name}</span>
-              <ChevronDown style={{ width: '13px', height: '13px', color: textSecondary }} />
+              <Sparkles style={{ width: '14px', height: '14px', color: '#60A5FA', flexShrink: 0 }} />
+              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {MODELS.find((m) => m.id === selectedModel)?.name}
+              </span>
+              <ChevronDown style={{ width: '13px', height: '13px', color: textSecondary, flexShrink: 0 }} />
             </button>
 
             {isModelMenuOpen && (
               <div
                 style={{
                   position: 'absolute',
-                  right: 0,
+                  left: 0,
                   marginTop: '6px',
                   width: '280px',
+                  maxWidth: 'calc(100vw - 32px)',
                   borderRadius: '16px',
                   padding: '8px',
                   backgroundColor: bgCard,
@@ -794,85 +717,26 @@ export function GeminiUI(props: { onSwitchToClassic?: () => void }) {
               </div>
             )}
           </div>
+        </div>
 
-          {/* Persona / Role Selector */}
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => {
-                setIsRoleMenuOpen(!isRoleMenuOpen);
-                setIsModelMenuOpen(false);
-              }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 10px',
-                borderRadius: '12px',
-                fontSize: '12px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                border: `1px solid ${borderCol}`,
-                backgroundColor: bgCard,
-                color: textPrimary,
-              }}
-              title="Rol del Asistente"
-            >
-              <SlidersHorizontal style={{ width: '14px', height: '14px', color: '#F59E0B' }} />
-            </button>
-
-            {isRoleMenuOpen && (
-              <div
-                style={{
-                  position: 'absolute',
-                  right: 0,
-                  marginTop: '6px',
-                  width: '240px',
-                  borderRadius: '16px',
-                  padding: '8px',
-                  backgroundColor: bgCard,
-                  border: `1px solid ${borderCol}`,
-                  boxShadow: '0 12px 36px rgba(0,0,0,0.4)',
-                  zIndex: 50,
-                }}
-              >
-                <div style={{ fontSize: '10px', fontWeight: 700, color: textSecondary, padding: '4px 8px' }}>
-                  ROLES Y PERSONALIDADES
-                </div>
-                {ROLES.map((r) => {
-                  const Icon = r.icon;
-                  return (
-                    <button
-                      key={r.id}
-                      onClick={() => {
-                        setSelectedRole(r.id);
-                        setIsRoleMenuOpen(false);
-                      }}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '8px 10px',
-                        borderRadius: '10px',
-                        border: 'none',
-                        backgroundColor: selectedRole === r.id ? (isDark ? '#3D311E' : '#FEF3C7') : 'transparent',
-                        color: selectedRole === r.id ? '#FDE68A' : textPrimary,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        fontSize: '12px',
-                        fontWeight: 500,
-                      }}
-                    >
-                      <Icon style={{ width: '14px', height: '14px', color: '#F59E0B' }} />
-                      <span>{r.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Theme Toggle */}
+        {/* Right: only New chat (+) and theme toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          <button
+            onClick={handleNewChat}
+            style={{
+              padding: '8px',
+              borderRadius: '12px',
+              border: `1px solid ${borderCol}`,
+              backgroundColor: bgCard,
+              color: textPrimary,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+            title="Nuevo chat"
+          >
+            <Plus style={{ width: '16px', height: '16px' }} />
+          </button>
           <button
             onClick={() => setIsDark(!isDark)}
             style={{
@@ -898,22 +762,55 @@ export function GeminiUI(props: { onSwitchToClassic?: () => void }) {
 
       {/* 2. Main Content Frame */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* Sidebar */}
+        {/* Sidebar — overlay with backdrop on mobile, push layout on desktop */}
         {sidebarOpen && (
+          <>
+            {isMobile && (
+              <div
+                onClick={() => setSidebarOpen(false)}
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  backgroundColor: 'rgba(0,0,0,0.5)',
+                  zIndex: 55,
+                }}
+              />
+            )}
           <aside
-            style={{
-              width: '260px',
-              borderRight: `1px solid ${borderCol}`,
-              backgroundColor: bgCard,
-              display: 'flex',
-              flexDirection: 'column',
-              flexShrink: 0,
-            }}
+            style={
+              isMobile
+                ? {
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    height: '100%',
+                    width: 'min(280px, 85vw)',
+                    borderRight: `1px solid ${borderCol}`,
+                    backgroundColor: bgCard,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flexShrink: 0,
+                    zIndex: 60,
+                    boxShadow: '0 0 40px rgba(0,0,0,0.5)',
+                  }
+                : {
+                    width: '260px',
+                    borderRight: `1px solid ${borderCol}`,
+                    backgroundColor: bgCard,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flexShrink: 0,
+                  }
+            }
           >
             {/* New Chat Button */}
             <div style={{ padding: '12px' }}>
               <button
-                onClick={handleNewChat}
+                onClick={() => {
+                  handleNewChat();
+                  if (isMobile) setSidebarOpen(false);
+                }}
                 style={{
                   width: '100%',
                   display: 'flex',
@@ -946,6 +843,7 @@ export function GeminiUI(props: { onSwitchToClassic?: () => void }) {
                   onClick={() => {
                     setCurrentChatId(c.id);
                     setActiveMode('chat');
+                    if (isMobile) setSidebarOpen(false);
                   }}
                   style={{
                     display: 'flex',
@@ -985,6 +883,47 @@ export function GeminiUI(props: { onSwitchToClassic?: () => void }) {
               ))}
             </div>
 
+            {/* Role selector (moved here from the header) */}
+            <div style={{ padding: '4px 12px 8px', borderTop: `1px solid ${borderCol}` }}>
+              <div style={{ fontSize: '10px', fontWeight: 700, color: textSecondary, padding: '8px 8px 4px' }}>
+                ROL DEL ASISTENTE
+              </div>
+              {ROLES.map((r) => {
+                const Icon = r.icon;
+                const selected = selectedRole === r.id;
+                return (
+                  <button
+                    key={r.id}
+                    onClick={() => {
+                      setSelectedRole(r.id);
+                      if (isMobile) setSidebarOpen(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '8px 10px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      backgroundColor: selected ? (isDark ? '#3D311E' : '#FEF3C7') : 'transparent',
+                      color: selected ? '#FDE68A' : textPrimary,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                    }}
+                  >
+                    <Icon style={{ width: '14px', height: '14px', color: '#F59E0B', flexShrink: 0 }} />
+                    <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {r.name}
+                    </span>
+                    {selected && <Check style={{ width: '13px', height: '13px', color: '#F59E0B', flexShrink: 0 }} />}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Sidebar Bottom: 9Router status */}
             <div style={{ padding: '12px', borderTop: `1px solid ${borderCol}` }}>
               <button
@@ -1013,12 +952,14 @@ export function GeminiUI(props: { onSwitchToClassic?: () => void }) {
               </button>
             </div>
           </aside>
+          </>
         )}
 
         {/* 3. Center Canvas (Chat, Image, Video, Live) */}
         <main
           style={{
             flex: 1,
+            minWidth: 0,
             display: 'flex',
             flexDirection: 'column',
             position: 'relative',
@@ -1043,7 +984,7 @@ export function GeminiUI(props: { onSwitchToClassic?: () => void }) {
                 style={{
                   flex: 1,
                   overflowY: 'auto',
-                  padding: '24px 16px',
+                  padding: isMobile ? '16px 12px' : '24px 16px',
                   display: 'flex',
                   flexDirection: 'column',
                 }}
@@ -1080,7 +1021,7 @@ export function GeminiUI(props: { onSwitchToClassic?: () => void }) {
 
                       <h1
                         style={{
-                          fontSize: '40px',
+                          fontSize: 'clamp(24px, 7vw, 40px)',
                           fontWeight: 800,
                           lineHeight: '1.15',
                           letterSpacing: '-0.03em',
@@ -1103,7 +1044,7 @@ export function GeminiUI(props: { onSwitchToClassic?: () => void }) {
                     <div
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(260px, 1fr))',
                         gap: '12px',
                       }}
                     >
@@ -1339,12 +1280,14 @@ export function GeminiUI(props: { onSwitchToClassic?: () => void }) {
               {/* Pinned Bottom Floating Prompt Pill Bar (Authentic Google Gemini Bar) */}
               <div
                 style={{
-                  padding: '12px 16px 16px 16px',
+                  padding: isMobile ? '8px 12px 12px 12px' : '12px 16px 16px 16px',
                   backgroundColor: 'transparent',
                   flexShrink: 0,
                 }}
               >
                 <div style={{ maxWidth: '768px', width: '100%', margin: '0 auto' }}>
+                  {/* Mode chips: Chat / Imagen / Video / Live */}
+                  {modeChips}
                   {/* Attachment thumbnail */}
                   {attachedImage && (
                     <div style={{ marginBottom: '8px', position: 'relative', display: 'inline-block' }}>
